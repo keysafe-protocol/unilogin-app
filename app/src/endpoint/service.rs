@@ -264,7 +264,7 @@ fn sign_msg(user: &persistence::User) -> String {
     let key_bytes = hex::decode(&user.ukey).unwrap();
     let secret = SecretKey::from_raw(&key_bytes).unwrap();
     let message = "welcome to unilogin";
-    let message_bytes = eth_message(message);
+    let message_bytes = eth_message(message.to_string());
     let signature = secret.sign(&message_bytes).unwrap();
     format!("{}{}{}", signature.v.to_string(), hex::encode(signature.r), hex::encode(signature.s))
 }
