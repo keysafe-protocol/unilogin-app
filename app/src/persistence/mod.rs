@@ -19,7 +19,7 @@ pub struct User {
 pub fn insert_user(pool: &Pool, user: User) {
     let mut conn = pool.get_conn().unwrap();
     let mut tx = conn.start_transaction(TxOpts::default()).unwrap();
-    tx.exec_drop("insert into user (uname, uaddr, ukey) values (?, ?, ?)",
+    tx.exec_drop("insert into unilogin (uname, uaddr, ukey) values (?, ?, ?)",
         (user.uname, user.uaddr, user.ukey)).unwrap();
     tx.commit().unwrap();
 }
