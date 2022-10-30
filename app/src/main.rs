@@ -152,7 +152,7 @@ async fn main() -> std::io::Result<()> {
             .service(user_info)
             .service(afs::Files::new("/", "./public").index_file("index.html"))
     })
-    .bind_openssl(server_url, builder)?
+    //.bind_openssl(server_url, builder)?
     .run()
     .await
 }
