@@ -137,7 +137,7 @@ async fn main() -> std::io::Result<()> {
 
     let server_url = format!("0.0.0.0:{}", conf.get("node_api_port").unwrap());
     HttpServer::new(move || {
-        let cors = Cors::permissive();
+        let mut cors = Cors::default().allow_any_origin();
         App::new()
            // .wrap(endpoint::middleware::VerifyToken) 
             .wrap(middleware::Logger::default())
