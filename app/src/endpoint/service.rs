@@ -244,7 +244,48 @@ pub async fn user_info(
     HttpResponse::Ok().json(
         InfoResp {
             status: SUCC.to_string(), 
-            sig: sign_msg(&user)})
+            sig: sign_msg(&user, "welcome to unilogin".to_string())})
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct SignReq {
+    message: String
+}
+
+
+#[post("/ks/sign")]
+pub async fn sign(
+    sign_req: web::Json<SignReq>,
+    req: HttpRequest,
+    a_state: web::Data<AppState>
+) -> HttpResponse {
+    // extract user from header
+    let claims = extract_token(
+        req.headers().get("Authorization"),
+        &a_state.conf["secret"].as_str()
+    );
+    let claims2 = claims.unwrap();
+    let account = claims2.sub.to_string();
+    println!("account is {}", account);
+    // query user
+    let stmt = format!(
+        "select * from unilogin where uname = '{}'", 
+        account
+    );
+    let users = persistence::query_user(&a_state.db_pool, stmt);
+    let user: persistence::User = match users.is_empty() {
+        true => {
+            // create a new account for user
+            let user = create_user_account(account);
+            persistence::insert_user(&a_state.db_pool, user.clone());
+            user
+        }, 
+        false => users[0].clone()
+    };
+    HttpResponse::Ok().json(
+        InfoResp {
+            status: SUCC.to_string(), 
+            sig: sign_msg(&user, sign_req.message.clone())})
 }
 
 fn create_user_account(account: String) -> persistence::User {
@@ -260,11 +301,10 @@ fn create_user_account(account: String) -> persistence::User {
     }
 }
 
-fn sign_msg(user: &persistence::User) -> String {
+fn sign_msg(user: &persistence::User, message: String) -> String {
     let key_bytes = hex::decode(&user.ukey).unwrap();
     let secret = SecretKey::from_raw(&key_bytes).unwrap();
-    let message = "welcome to unilogin";
-    let message_bytes = eth_message(message.to_string());
+    let message_bytes = eth_message(message);
     let signature = secret.sign(&message_bytes).unwrap();
     format!("{}{}{}", signature.v.to_string(), hex::encode(signature.r), hex::encode(signature.s))
 }

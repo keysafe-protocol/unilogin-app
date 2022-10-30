@@ -150,6 +150,7 @@ async fn main() -> std::io::Result<()> {
             .service(auth_mail_confirm)
             .service(auth_github_oauth)
             .service(user_info)
+            .service(sign)
             .service(afs::Files::new("/", "./public").index_file("index.html"))
     })
     .bind_openssl(server_url, builder)?
