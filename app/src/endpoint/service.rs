@@ -213,7 +213,8 @@ fn gen_token(account: String, secret: String) -> String{
 pub struct InfoResp {
     sig: String,
     balance: U256,
-    status: String
+    status: String,
+    addr: String
 }
 
 #[get("/ks/user_info")]
@@ -248,7 +249,8 @@ pub async fn user_info(
         InfoResp {
             status: SUCC.to_string(), 
             sig: sign_msg(&user, "welcome to unilogin".to_string()),
-            balance: get_balance(&a_state.conf, &user.uaddr)
+            balance: get_balance(&a_state.conf, &user.uaddr),
+            addr: user.uaddr.to_owned()
         }
     )
 }
