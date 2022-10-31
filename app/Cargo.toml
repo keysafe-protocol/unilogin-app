@@ -14,6 +14,7 @@ actix-http = "=3.2.1"
 actix-cors = "=0.6.1"
 cookie = "=0.16.0"
 actix-files = { version = "0.6.0" }
+futures = "=0.3.17"
 futures-util = { version = "=0.3.17", default-features = false, features = ["sink"] }
 scoped-tls = "=1.0"
 proc-macro2 = { version = "=1.0.32" }

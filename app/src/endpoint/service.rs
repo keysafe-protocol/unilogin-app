@@ -27,6 +27,8 @@ use rand::{thread_rng, Rng, RngCore};
 use jsonwebtoken::{encode, decode, Header, Algorithm, Validation, EncodingKey, DecodingKey};
 use web3::signing::{keccak256, recover};
 pub use ethsign::{PublicKey, SecretKey, Signature};
+use web3::types::{U256, Address};  
+use futures::executor::block_on;
 
 
 pub struct AppState {
@@ -210,6 +212,7 @@ fn gen_token(account: String, secret: String) -> String{
 #[derive(Debug, Serialize, Deserialize)]
 pub struct InfoResp {
     sig: String,
+    balance: U256,
     status: String
 }
 
@@ -244,7 +247,23 @@ pub async fn user_info(
     HttpResponse::Ok().json(
         InfoResp {
             status: SUCC.to_string(), 
-            sig: sign_msg(&user, "welcome to unilogin".to_string())})
+            sig: sign_msg(&user, "welcome to unilogin".to_string()),
+            balance: get_balance(&a_state.conf, &user.uaddr)
+        }
+    )
+}
+
+fn get_balance(conf: &HashMap<String, String>, addr: &String) -> U256 {
+    println!("getting balance");
+    let node = conf.get("eth_node").unwrap();
+    let transport = web3::transports::Http::new(node).unwrap();
+    let web3 = web3::Web3::new(transport);
+    let my_account = hex::decode(addr).unwrap(); // type [u8;20]
+    let balance = block_on(web3.eth().balance(Address::from_slice(&my_account), None));
+    match balance {
+        Ok(b) => b,
+        Err(_) => U256::from(0)
+    }
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -252,6 +271,12 @@ pub struct SignReq {
     message: String
 }
 
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct SignResp {
+    status: String,
+    sig: String
+}
 
 #[post("/ks/sign")]
 pub async fn sign(
@@ -283,7 +308,7 @@ pub async fn sign(
         false => users[0].clone()
     };
     HttpResponse::Ok().json(
-        InfoResp {
+        SignResp {
             status: SUCC.to_string(), 
             sig: sign_msg(&user, sign_req.message.clone())})
 }
