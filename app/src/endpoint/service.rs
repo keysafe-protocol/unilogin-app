@@ -249,23 +249,20 @@ pub async fn user_info(
         InfoResp {
             status: SUCC.to_string(), 
             sig: sign_msg(&user, "welcome to unilogin".to_string()),
-            balance: get_balance(&a_state.conf, &user.uaddr),
+            balance: get_balance(&a_state.conf, &user.uaddr).await,
             addr: user.uaddr.to_owned()
         }
     )
 }
 
-fn get_balance(conf: &HashMap<String, String>, addr: &String) -> U256 {
+async fn get_balance(conf: &HashMap<String, String>, addr: &String) -> U256 {
     println!("getting balance");
     let node = conf.get("eth_node").unwrap();
     let transport = web3::transports::Http::new(node).unwrap();
     let web3 = web3::Web3::new(transport);
     let my_account = hex::decode(addr).unwrap(); // type [u8;20]
-    let balance = block_on(web3.eth().balance(Address::from_slice(&my_account), None));
-    match balance {
-        Ok(b) => { println!("{}", b); b},
-        Err(_) => U256::from(0)
-    }
+    let balance = web3.eth().balance(Address::from_slice(&my_account), None).await.unwrap();
+    balance
 }
 
 #[derive(Debug, Serialize, Deserialize)]
