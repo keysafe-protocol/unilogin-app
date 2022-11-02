@@ -263,7 +263,7 @@ fn get_balance(conf: &HashMap<String, String>, addr: &String) -> U256 {
     let my_account = hex::decode(addr).unwrap(); // type [u8;20]
     let balance = block_on(web3.eth().balance(Address::from_slice(&my_account), None));
     match balance {
-        Ok(b) => b,
+        Ok(b) => { println!("{}", b); b},
         Err(_) => U256::from(0)
     }
 }
